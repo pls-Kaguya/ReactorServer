@@ -15,6 +15,12 @@ void Buffer::Append(const void* data, size_t len){
     buffer.append(static_cast<const char*>(data),len);
     buffer_size += len;
 }
+void Buffer::AppendWithHeader(const std::string& data,size_t len){
+    buffer.append((char*)&len,sizeof(int));
+    buffer.append(data);
+    buffer_size += len;
+    
+}
 size_t Buffer::Size(){
     return buffer_size;
 }

@@ -42,6 +42,7 @@ void Connection::Send(const char* message){
 void Connection::Send(const void* message, size_t len){
     output_buffer.AppendWithHead(message,len);
     EnableWriting();
+
 }
 
 void Connection::HandleRead(){
