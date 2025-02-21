@@ -12,7 +12,7 @@ class TcpServer{
         std::vector<EventLoop*> sub_loop;
         Acceptor *acceptor;
         std::map<int,Connection*> conn_map;
-        ThreadPool *sub_thread_pool;
+        ThreadPool *thread_pool;
         int thread_num;
         std::function<void(Connection*)> new_connection_callback;
         std::function<void(Connection*)> close_connection_callback;

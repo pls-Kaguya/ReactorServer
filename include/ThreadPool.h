@@ -1,10 +1,11 @@
 #pragma once
 #include <vector>
-#include<sys/syscall.h>
+#include <sys/syscall.h>
 #include <iostream>
 #include <mutex>
 #include <unistd.h>
 #include <thread>
+#include <deque>
 #include <queue>
 #include <condition_variable>
 #include <functional>
