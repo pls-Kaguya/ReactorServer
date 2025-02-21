@@ -35,31 +35,47 @@ void TcpServer::NewConnection(Socket *serv_sock_ip4){
     conn->SetReadCallback(std::bind(&TcpServer::MessageHandle,this,std::placeholders::_1,std::placeholders::_2));
     conn->SetWriteCallback(std::bind(&TcpServer::SendComplete,this,std::placeholders::_1));
     conn_map[conn->GetFd()] = conn;
+    new_connection_callback(conn);
 }
 void TcpServer::CloseConnect(Connection *conn){
+    close_connection_callback(conn);
     std::cout<<"client (eventfd="<<conn->GetFd()<<") disconnected"<<endl;
-    //close(conn->GetFd());
     conn_map.erase(conn->GetFd());
     delete conn;
 }
 void TcpServer::ErrorConnect(Connection *conn){
+    error_connection_callback(conn);
     std::cout<<"client (eventfd="<<conn->GetFd()<<") disconnected"<<endl;
     conn_map.erase(conn->GetFd());
     delete conn;
 }
-void TcpServer::MessageHandle(Connection *conn,std::string message){
-    message = "recv ok, server ok";
-    len = message.size();
-    std::string tmpmsg((char*)&len,sizeof(int));
-    tmpmsg.append(message);
-    // 发送响应消息
-    send(conn->GetFd(),tmpmsg.c_str(),tmpmsg.size(),0);
+void TcpServer::MessageHandle(Connection *conn,std::string &message){
+   message_callback(conn,message);
 }
 void TcpServer::SendComplete(Connection *conn){
-    std::cout<<"send complete"<<endl;
+
+    send_complete_callback(conn);
 }
 void TcpServer::EpollTimeout(EventLoop *loop){
-    std::cout<<"epoll timeout"<<endl;
+    timeout_callback(loop);
+}
+void SetNewConnectionCallback(std::function<void(Connection*)> cb){
+    new_connection_callback = cb;
+}
+void SetCloseConnectionCallback(std::function<void(Connection*)> cb){
+    close_connection_callback = cb;
+}
+void SetErrorConnectionCallback(std::function<void(Connection*)> cb){
+    error_connection_callback = cb;
+}
+void SetMessageCallback(std::function<void(Connection*,std::string)> cb){
+    message_callback = cb;
+}
+void SetSendCompleteCallback(std::function<void(Connection*)> cb){
+    send_complete_callback = cb;
+}
+void SetTimeoutCallback(std::function<void(EventLoop*)> cb){
+    timeout_callback = cb;
 }
 TcpServer::~TcpServer() {
     delete acceptor;

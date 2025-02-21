@@ -12,6 +12,13 @@ class TcpServer{
         Acceptor *acceptor;
         std::map<int,Connection*> conn_map;
 
+        std::function<void(Connection*)> new_connection_callback;
+        std::function<void(Connection*)> close_connection_callback;
+        std::function<void(Connection*)> error_connection_callback;
+        std::function<void(Connection*,std::string)> message_callback;
+        std::function<void(Connection*)> send_complete_callback;
+        std::function<void(EventLoop*)> timeout_callback;
+
     public:
         TcpServer();
         TcpServer(const std::string& ip, uint16_t port);
@@ -19,9 +26,16 @@ class TcpServer{
         void NewConnection(Socket *serv_sock_ip4);
         void CloseConnect(Connection *conn);
         void ErrorConnect(Connection *conn);
-        void MessageHandle(Connection *conn,std::string message);
+        void MessageHandle(Connection *conn,std::string &message);
         void SendComplete(Connection *conn);
         void EpollTimeout(EventLoop *loop);
+
+        void SetNewConnectionCallback(std::function<void(Connection*) cb);
+        void SetCloseConnectionCallback(std::function<void(Connection*) cb);
+        void SetErrorConnectionCallback(std::function<void(Connection*) cb);
+        void SetMessageCallback(std::function<void(Connection*,std::string) cb);
+        void SetSendCompleteCallback(std::function<void(Connection*) cb);
+        void SetTimeoutCallback(std::function<void(EventLoop*) cb);
         ~TcpServer();
 };
 
