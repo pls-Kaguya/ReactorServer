@@ -13,23 +13,41 @@
 
 // 默认构造函数
 TcpServer::TcpServer() {
-    loop = new EventLoop();
-    acceptor = new Acceptor(loop,"192.168.1.60",8086);
-    acceptor->SetNewConnectionCallback(std::bind(&TcpServer::NewConnection,this,std::placeholders::_1));
+    mainloop = new EventLoop();
     loop->SetTimeoutCallback(std::bind(&TcpServer::EpollTimeout,this,std::placeholders::_1));
+
+    acceptor = new Acceptor(mainloop,"192.168.1.60",8086);
+    acceptor->SetNewConnectionCallback(std::bind(&TcpServer::NewConnection,this,std::placeholders::_1));
+    
+    thread_pool = new ThreadPool(thread_num);
+    for(int i=0;i<thread_num;i++){
+        sub_loop.push_back(new EventLoop());
+        sub_loop[i]->SetTimeoutCallback(std::bind(&TcpServer::EpollTimeout,this,std::placeholders::_1)); 
+        thread_pool->AddTask(std::bind(&EventLoop::Run,sub_loop[i]));
+    }
+
 }
-TcpServer::TcpServer(const std::string& ip, uint16_t port) {
-    loop = new EventLoop();
-    acceptor = new Acceptor(loop,ip,port);
-    acceptor->SetNewConnectionCallback(std::bind(&TcpServer::NewConnection,this,std::placeholders::_1));
+TcpServer::TcpServer(const std::string& ip, uint16_t port,int num):thread_num(num) {
+    mainloop = new EventLoop();
     loop->SetTimeoutCallback(std::bind(&TcpServer::EpollTimeout,this,std::placeholders::_1));
+
+    acceptor = new Acceptor(mainloop,ip,port);
+    acceptor->SetNewConnectionCallback(std::bind(&TcpServer::NewConnection,this,std::placeholders::_1));
+    
+    thread_pool = new ThreadPool(thread_num);
+    for(int i=0;i<thread_num;i++){
+        sub_loop.push_back(new EventLoop());
+        sub_loop[i]->SetTimeoutCallback(std::bind(&TcpServer::EpollTimeout,this,std::placeholders::_1)); 
+        thread_pool->AddTask(std::bind(&EventLoop::Run,sub_loop[i]));
+    }
+
 }
 void TcpServer::Start(){
-    loop->Run();
+    mainloop->Run();
 }
 
 void TcpServer::NewConnection(Socket *serv_sock_ip4){
-    Connection *conn = new Connection(loop,serv_sock_ip4);
+    Connection *conn = new Connection(mainloop,serv_sock_ip4);
     conn->SetCloseCallback(std::bind(&TcpServer::CloseConnect,this,std::placeholders::_1));
     conn->SetErrorCallback(std::bind(&TcpServer::ErrorConnect,this,std::placeholders::_1));
     conn->SetReadCallback(std::bind(&TcpServer::MessageHandle,this,std::placeholders::_1,std::placeholders::_2));

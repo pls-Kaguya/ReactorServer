@@ -3,15 +3,17 @@
 #include"Channel.h"
 #include"Connection.h"
 #include<map>
-
+#include"ThreadPool.h"
 class Accpetor;
 class Channel;
 class TcpServer{
     private:
-        EventLoop* loop;
+        EventLoop* mainloop;
+        std::vector<EventLoop*> sub_loop;
         Acceptor *acceptor;
         std::map<int,Connection*> conn_map;
-
+        ThreadPool *sub_thread_pool;
+        int thread_num;
         std::function<void(Connection*)> new_connection_callback;
         std::function<void(Connection*)> close_connection_callback;
         std::function<void(Connection*)> error_connection_callback;
@@ -21,7 +23,7 @@ class TcpServer{
 
     public:
         TcpServer();
-        TcpServer(const std::string& ip, uint16_t port);
+        TcpServer(const std::string& ip, uint16_t port,int thread_num=5);
         void Start();
         void NewConnection(Socket *serv_sock_ip4);
         void CloseConnect(Connection *conn);
