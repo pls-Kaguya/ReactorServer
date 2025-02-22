@@ -2,7 +2,7 @@
 #include <sys/syscall.h> // 添加此行以包含 SYS_gettid 所需的头文件
 
 // 构造函数，初始化线程池
-ThreadPool::ThreadPool(int num) : stop(false) {
+ThreadPool::ThreadPool(int num,int type) : stop(false),type(type) {
     for (int i = 0; i < num; i++) {
         // 创建线程并将其添加到线程池
         thread_pool.emplace_back([this] {

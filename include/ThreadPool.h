@@ -13,10 +13,14 @@
 #include <atomic>
 
 // 线程池类
+enum ThreadType{
+    IO,
+    WORK
+};
 class ThreadPool {
     public:
         // 构造函数，初始化线程池
-        ThreadPool(int num);
+        ThreadPool(int num,int Type);
         
         // 析构函数，停止所有线程
         ~ThreadPool();
@@ -42,8 +46,9 @@ class ThreadPool {
         
         // 停止标志
         std::atomic<bool> stop;
+
+        //线程种类
+        int type;
         
-        // 线程函数
-        void ThreadFunc();
 };
 

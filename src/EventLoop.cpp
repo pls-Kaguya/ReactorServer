@@ -1,40 +1,50 @@
-#include"EventLoop.h"
+#include "EventLoop.h"
 
-/*
-
-class EventLoop{
-    private:
-        Epoll *ep;
-    public:
-        EventLoop();
-        void Run();
-        ~EventLoop();
-};*/
-EventLoop::EventLoop(){
+// 构造函数，初始化 Epoll 实例
+EventLoop::EventLoop() {
     ep = new Epoll();
 }
-void EventLoop::Run(){
-    while(true){
+
+// 运行事件循环
+void EventLoop::Run() {
+    std::cout << "create thread " << syscall(SYS_gettid) << std::endl;
+    while (true) {
         std::vector<Channel *> channels;
-        channels = ep->EventLoop();
-        if(channels.size()==0){
+        channels = ep->EventLoop(); // 等待事件发生
+
+        if (channels.size() == 0) {
+            // 如果没有事件发生，调用超时回调函数
             timeout_callback(this);
-        }else{
-            for(auto&ch:channels){
+        } else {
+            // 处理所有就绪的事件
+            for (auto& ch : channels) {
                 ch->EventHandle();
             }
-        } 
+        }
     }
 }
-Epoll* EventLoop::GetEpoll(){
+
+// 获取 Epoll 实例
+Epoll* EventLoop::GetEpoll() {
     return ep;
 }
-void EventLoop::UpdateChannel(Channel *ch){
+
+// 更新 Channel 对象的事件
+void EventLoop::UpdateChannel(Channel *ch) {
     ep->UpdateChannel(ch);
 }
-void EventLoop::SetTimeoutCallback(std::function<void(EventLoop*)> cb){
+
+// 从事件循环中移除 Channel 对象
+void EventLoop::RemoveChannel(Channel* ch) {
+    ep->RemoveChannel(ch);
+}
+
+// 设置超时回调函数
+void EventLoop::SetTimeoutCallback(std::function<void(EventLoop*)> cb) {
     timeout_callback = cb;
 }
-EventLoop::~EventLoop(){
+
+// 析构函数，释放 Epoll 实例
+EventLoop::~EventLoop() {
     delete ep;
 }
